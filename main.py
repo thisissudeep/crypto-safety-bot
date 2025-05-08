@@ -25,7 +25,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     Start command to introduce the bot and begin collecting features.
     """
     await update.message.reply_text(
-        "Welcome to Crypto Fraud Detection Bot! 🚀\n"
+        "Welcome to Crypto Fraud Detection Bot!\n"
         "I will ask you for the following transaction features one by one:\n"
         "1. Length\n"
         "2. Weight\n"
@@ -42,7 +42,7 @@ async def collect_length(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         user_data["length"] = int(update.message.text)
         await update.message.reply_text(
-            "Got it! Now, please provide the Weight. (Sample Format: 1096)"
+            "Got it! Now, please provide the Weight. (Sample Format: 1096.05)"
         )
         return WEIGHT
     except ValueError:
@@ -54,14 +54,14 @@ async def collect_length(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def collect_weight(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        user_data["weight"] = int(update.message.text)
+        user_data["weight"] = float(update.message.text)
         await update.message.reply_text(
             "Weight recorded! Next, provide the Count (Sample Format: 8)."
         )
         return COUNT
     except ValueError:
         await update.message.reply_text(
-            "Invalid input. Please provide a numeric value for Weight.(Sample Format: 1096)"
+            "Invalid input. Please provide a Float value for Weight.(Sample Format: 1096.05)"
         )
         return WEIGHT
 
@@ -75,7 +75,7 @@ async def collect_count(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return LOOPED
     except ValueError:
         await update.message.reply_text(
-            "Invalid input. Please provide a numeric value for Count. (1 for Yes, 0 for No)"
+            "Invalid input. Please provide a numeric value for Count. (Sample Format: 8)"
         )
         return COUNT
 
@@ -100,7 +100,7 @@ async def collect_neighbors(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         user_data["neighbors"] = int(update.message.text)
         await update.message.reply_text(
-            "Neighbors recorded! Finally, provide the Income in dollars (Sample Format: 4931.63)."
+            "Neighbors recorded! Finally, provide the Income in dollars (Sample Format: 4931)."
         )
         return INCOME
     except ValueError:
@@ -112,7 +112,7 @@ async def collect_neighbors(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def collect_income(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        user_data["income"] = float(update.message.text)
+        user_data["income"] = int(update.message.text)
         await update.message.reply_text(
             "Income recorded! Processing your data for fraud detection..."
         )
@@ -139,22 +139,23 @@ async def collect_income(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def predict_fraud(raw_features: dict) -> str:
 
-    # print(raw_features)
+    print("Raw Transaction Format:\n", raw_features)
 
     df_features = pd.DataFrame([raw_features])
-    # print(df_features)
+    print("DF Transaction Format:\n", df_features)
 
     scaler = joblib.load("scaler.pkl")
     scaled_features = scaler.transform(df_features)
-    # print(scaled_features)
+    scaled_features = pd.DataFrame(scaled_features, columns=df_features.columns)
+    print("Standardized Data Format:\n", scaled_features)
 
     model = joblib.load("model.pkl")
     prediction = model.predict(scaled_features)
 
     if prediction[0] == 1:
-        return "Fraudulent Transaction 🚨"
+        return "Fraudulent Transaction"
     else:
-        return "Transaction appears legitimate ✅"
+        return "Transaction appears legitimate"
 
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
